@@ -59,6 +59,12 @@ export const dispatchOrgan = async (req: Request, res: Response): Promise<void> 
       route: result.route,
       estimatedDurationSeconds: Math.round(result.logs.find((l) => l.data?.duration)?.data?.duration as number ?? 300),
       status: "DISPATCHED" as const,
+      // CCTV and routing data for map visualization
+      routes: result.routes,
+      cctvs: result.cctvs,
+      waypoints: result.waypoints,
+      bestRouteIndex: result.bestRouteIndex,
+      violations: result.violations,
     };
 
     res.json(dispatch);
@@ -119,6 +125,12 @@ export const dispatchPatient = async (req: Request, res: Response): Promise<void
       route: result.route,
       estimatedDurationSeconds: Math.round(result.logs.find((l) => l.data?.duration)?.data?.duration as number ?? 300),
       status: "DISPATCHED" as const,
+      // CCTV and routing data for map visualization
+      routes: result.routes,
+      cctvs: result.cctvs,
+      waypoints: result.waypoints,
+      bestRouteIndex: result.bestRouteIndex,
+      violations: result.violations,
     };
 
     res.json(dispatch);

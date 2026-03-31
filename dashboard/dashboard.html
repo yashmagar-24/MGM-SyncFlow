@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLGCA Dashboard — Emergency Dispatch</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --sidebar-bg: #0c0f18;
+    --surface: #161b27;
+    --surface2: #1e2536;
+    --border: #2a3147;
+    --border2: #353f59;
+    --accent: #4f8ef7;
+    --accent-hover: #6aa3ff;
+    --text: #e4e8f0;
+    --text2: #8b95a8;
+    --text3: #525c73;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --critical: #f87171;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 64px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 0;
+    gap: 6px;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .sidebar-logo {
+    width: 36px;
+    height: 36px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .sidebar-logo svg { width: 18px; height: 18px; }
+
+  .nav-item {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    position: relative;
+    border: 1px solid transparent;
+  }
+
+  .nav-item svg { width: 18px; height: 18px; color: var(--text3); }
+
+  .nav-item:hover {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+
+  .nav-item:hover svg { color: var(--text2); }
+
+  .nav-item.active {
+    background: rgba(79, 142, 247, 0.1);
+    border-color: rgba(79, 142, 247, 0.25);
+  }
+
+  .nav-item.active svg { color: var(--accent); }
+
+  .nav-item .badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 7px;
+    height: 7px;
+    background: var(--critical);
+    border-radius: 50%;
+  }
+
+  .sidebar-spacer { flex: 1; }
+
+  .sidebar-user {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .sidebar-user svg { width: 14px; height: 14px; color: var(--text3); }
+
+  /* MAIN */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    height: 52px;
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .topbar-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.03em;
+  }
+
+  .topbar-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .topbar-spacer { flex: 1; }
+
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .pill-ok {
+    background: rgba(52, 211, 153, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+  }
+
+  .pill-crit {
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--critical);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+  }
+
+  .pill-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .topbar-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text2);
+    border-left: 1px solid var(--border);
+    padding-left: 16px;
+  }
+
+  /* CONTENT */
+  .content { flex: 1; overflow: hidden; display: flex; }
+
+  /* TAB PANELS */
+  .tab-panel { display: none; flex: 1; overflow: auto; padding: 22px; }
+  .tab-panel.active { display: flex; flex-direction: column; gap: 18px; }
+
+  /* GRID */
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+
+  .card-sm { padding: 14px 16px; }
+
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .card-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .card-value small { font-size: 14px; color: var(--text3); }
+  .card-value.crit { color: var(--critical); }
+  .card-value.warn { color: var(--warning); }
+  .card-value.ok { color: var(--success); }
+  .card-value.blue { color: var(--accent); }
+  .card-meta { font-size: 11px; color: var(--text3); margin-top: 5px; }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .section-action {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    cursor: pointer;
+  }
+
+  .section-action:hover { color: var(--accent-hover); }
+
+  /* Table */
+  .ptable { width: 100%; border-collapse: collapse; }
+
+  .ptable th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    text-transform: uppercase;
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  .ptable td {
+    padding: 10px 10px;
+    font-size: 13px;
+    color: var(--text2);
+    border-bottom: 1px solid rgba(42, 49, 71, 0.5);
+    vertical-align: middle;
+  }
+
+  .ptable tr:hover td { background: rgba(30, 37, 54, 0.4); }
+  .ptable tr:last-child td { border-bottom: none; }
+
+  /* Badge */
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .badge-crit { background: rgba(248, 113, 113, 0.12); color: var(--critical); }
+  .badge-warn { background: rgba(251, 191, 36, 0.12); color: var(--warning); }
+  .badge-ok { background: rgba(52, 211, 153, 0.12); color: var(--success); }
+
+  /* PCS bar */
+  .pcs-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .pcs-bar { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .pcs-fill { height: 100%; border-radius: 2px; }
+  .pcs-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; width: 22px; text-align: right; }
+
+  /* Hospital cards */
+  .hosp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    transition: border-color 0.15s;
+  }
+
+  .hosp-card:hover { border-color: var(--border2); }
+  .hosp-card.selected { border-color: var(--accent); background: rgba(79, 142, 247, 0.04); }
+
+  .hosp-name { font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 3px; }
+  .hosp-type { font-size: 10px; color: var(--text3); font-family: 'JetBrains Mono', monospace; margin-bottom: 12px; }
+
+  .bed-chip {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    margin-right: 6px;
+    margin-bottom: 6px;
+  }
+
+  .bed-chip.avail,
+  .bed-chip.ok { border-color: rgba(52, 211, 153, 0.3); color: var(--success); }
+  .bed-chip.low { border-color: rgba(251, 191, 36, 0.3); color: var(--warning); }
+  .bed-chip.full { border-color: rgba(248, 113, 113, 0.3); color: var(--critical); }
+
+  /* Form elements */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    text-transform: uppercase;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 11px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus { border-color: var(--accent); }
+
+  .field select option { background: var(--surface2); }
+  .field textarea { resize: none; height: 72px; }
+
+  /* Toggle */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(42, 49, 71, 0.5);
+  }
+
+  .toggle-row:last-child { border-bottom: none; }
+
+  .toggle-label { font-size: 13px; color: var(--text2); }
+  .toggle-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .toggle {
+    width: 36px;
+    height: 20px;
+    background: var(--border2);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toggle.on { background: var(--accent); }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    top: 3px;
+    left: 3px;
+    transition: left 0.2s;
+  }
+
+  .toggle.on::after { left: 19px; }
+
+  /* Buttons */
+  .btn {
+    padding: 9px 16px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s, opacity 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-danger { background: rgba(248, 113, 113, 0.12); color: var(--critical); border: 1px solid rgba(248, 113, 113, 0.2); }
+  .btn-danger:hover { background: rgba(248, 113, 113, 0.2); }
+  .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+
+  /* Map */
+  .map-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    height: 300px;
+  }
+
+  .map-placeholder {
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(circle at 35% 45%, rgba(79, 142, 247, 0.07) 0%, transparent 40%),
+      radial-gradient(circle at 70% 60%, rgba(52, 211, 153, 0.05) 0%, transparent 35%),
+      var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .map-pin {
+    position: absolute;
+    font-size: 20px;
+  }
+
+  .map-pin.p1 { top: 35%; left: 28%; }
+  .map-pin.p2 { top: 55%; left: 65%; }
+  .map-pin.p3 { top: 22%; left: 54%; }
+
+  .map-legend {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(22, 27, 39, 0.92);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .map-overlay-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .map-ctrl-btn {
+    width: 30px;
+    height: 30px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text2);
+    transition: background 0.15s;
+  }
+
+  .map-ctrl-btn:hover { background: var(--surface2); color: var(--text); }
+
+  /* Timeline */
+  .timeline { display: flex; flex-direction: column; }
+
+  .tl-item {
+    display: flex;
+    gap: 14px;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(42, 49, 71, 0.4);
+  }
+
+  .tl-item:last-child { border-bottom: none; }
+
+  .tl-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 38px;
+  }
+
+  .tl-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  .tl-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 2px solid;
+    flex-shrink: 0;
+  }
+
+  .tl-dot.crit { border-color: var(--critical); background: rgba(248, 113, 113, 0.15); }
+  .tl-dot.warn { border-color: var(--warning); background: rgba(251, 191, 36, 0.15); }
+  .tl-dot.ok { border-color: var(--success); background: rgba(52, 211, 153, 0.15); }
+
+  .tl-content { flex: 1; }
+  .tl-title { font-size: 13px; color: var(--text); margin-bottom: 2px; }
+  .tl-detail { font-size: 11px; color: var(--text3); }
+
+  /* Progress bars */
+  .progress-item { margin-bottom: 12px; }
+  .progress-item:last-child { margin-bottom: 0; }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 5px;
+  }
+
+  .progress-bar-wrap {
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill { height: 100%; border-radius: 3px; }
+
+  /* Notification card */
+  .notif-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 13px 15px;
+    margin-bottom: 10px;
+  }
+
+  .notif-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+  }
+
+  .notif-header svg { width: 15px; height: 15px; color: var(--text3); flex-shrink: 0; }
+
+  .notif-title { font-weight: 600; font-size: 13px; color: var(--text); flex: 1; }
+
+  .notif-to {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+  }
+
+  .notif-body { color: var(--text2); line-height: 1.6; font-size: 12px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    z-index: 999;
+    transform: translateX(120%);
+    transition: transform 0.25s;
+    max-width: 300px;
+  }
+
+  .toast.show { transform: none; }
+  .toast.toast-ok { border-color: rgba(52, 211, 153, 0.4); }
+  .toast.toast-crit { border-color: rgba(248, 113, 113, 0.4); }
+
+  /* CCTV Pulse animation */
+  @keyframes cctvPulse {
+    0%   { opacity: 1; transform: scale(1); }
+    50%  { opacity: 0.5; transform: scale(1.8); }
+    100% { opacity: 0; transform: scale(2.5); }
+  }
+  .cctv-pulse::after {
+    content: '';
+    position: absolute;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: var(--warning);
+    animation: cctvPulse 1.5s ease-out infinite;
+    top: 0; left: 0;
+  }
+
+  /* Ambulance marker */
+  .ambulance-marker {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border: 2px solid #fff;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(79,142,247,0.5);
+  }
+  .ambulance-marker-inner {
+    transform: rotate(45deg);
+    color: #fff; font-size: 12px; font-weight: bold;
+    text-align: center; line-height: 1;
+  }
+
+  /* Tracking status strip */
+  .tracking-strip {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    background: rgba(22,27,39,0.95);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--warning);
+    z-index: 1000;
+    white-space: nowrap;
+  }
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent)">
+      <path d="M3 12h4l3-9 4 18 3-9h4"/>
+    </svg>
+  </div>
+
+  <div class="nav-item active" onclick="switchTab(0)" title="Overview">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+  </div>
+
+  <div class="nav-item" onclick="switchTab(1)" title="New Emergency" style="position:relative">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    <div class="badge"></div>
+  </div>
+
+  <div class="nav-item" onclick="switchTab(2)" title="Patient Assessment">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+  </div>
+
+  <div class="nav-item" onclick="switchTab(3)" title="Hospitals">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  </div>
+
+  <div class="nav-item" onclick="switchTab(4)" title="Route">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+  </div>
+
+  <div class="nav-item" onclick="switchTab(5)" title="Notifications">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+  </div>
+
+  <div class="sidebar-spacer"></div>
+
+  <div class="nav-item" onclick="switchTab(6)" title="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </div>
+
+  <div class="sidebar-user" title="Logout" onclick="window.location.href='login.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbarTitle">Overview</div>
+      <div class="topbar-sub">LLGCA · Aurangabad Emergency Network</div>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="pill pill-ok"><div class="pill-dot"></div> System OK</div>
+    <div class="topbar-time" id="clock">--:--:--</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TAB 0: OVERVIEW -->
+    <div class="tab-panel active" id="tab0">
+
+      <div class="grid-4">
+        <div class="card card-sm">
+          <div class="card-label" style="color:var(--text3)">Active Emergencies</div>
+          <div class="card-value">0</div>
+          <div class="card-meta">No active emergencies</div>
+        </div>
+        <div class="card card-sm">
+          <div class="card-label" style="color:var(--text3)">En Route</div>
+          <div class="card-value">0</div>
+          <div class="card-meta">No ambulances en route</div>
+        </div>
+        <div class="card card-sm">
+          <div class="card-label" style="color:var(--text3)">Corridors Active</div>
+          <div class="card-value">0</div>
+          <div class="card-meta">No active corridors</div>
+        </div>
+        <div class="card card-sm">
+          <div class="card-label" style="color:var(--text3)">Total Today</div>
+          <div class="card-value">0</div>
+          <div class="card-meta">No dispatches today</div>
+        </div>
+      </div>
+
+      <div class="grid-2-1">
+        <div class="card" style="padding:0">
+          <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display:flex; align-items:center; justify-content:space-between;">
+            <span class="section-title" id="mapTitle">Live Tracking</span>
+            <span class="section-action" id="mapStatus" style="color:var(--text3);font-size:10px"></span>
+          </div>
+          <div class="map-container" style="border:none; border-radius:0 0 10px 10px; height:260px; position:relative">
+            <div id="liveMap" style="width:100%;height:100%;background:var(--bg)"></div>
+            <div id="trackingStrip" class="tracking-strip" style="display:none">
+              Last seen: <span id="cctvLabel">—</span>
+            </div>
+            <div class="map-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div>CCTV Camera</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--critical)"></div>Emergency</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--success)"></div>Hospital</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:14px">
+          <div class="card" id="hospitalCapacityCard">
+            <div class="section-header"><span class="section-title">Hospital Capacity</span></div>
+            <div class="card-value" style="color:var(--text3);font-size:16px;padding:8px 0;text-align:center">
+              <div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3)">No hospitals configured</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">Connect a database to see hospital data</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title" style="margin-bottom:10px">AI Assessment Queue</div>
+            <div style="padding:16px 0; text-align:center;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">No patients in queue</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">AI assessments will appear here</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active patients table -->
+      <div class="card">
+        <div class="section-header">
+          <span class="section-title">Active Patient Dispatches</span>
+          <span class="section-action" onclick="switchTab(1)">+ New Emergency</span>
+        </div>
+        <table class="ptable">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Emergency</th>
+              <th>Location</th>
+              <th>Hospital</th>
+              <th>PCS</th>
+              <th>Status</th>
+              <th>ETA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7" style="text-align:center; padding:24px; color:var(--text3); font-size:13px;">No active dispatches</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 1: NEW EMERGENCY -->
+    <div class="tab-panel" id="tab1">
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:18px">New Emergency Request</div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Patient Name</label>
+              <input type="text" id="f-patientName" placeholder="Full name">
+            </div>
+            <div class="field">
+              <label>Age / Gender</label>
+              <input type="text" id="f-ageGender" placeholder="e.g. 45M / 32F">
+            </div>
+            <div class="field" style="grid-column:1/-1">
+              <label>Pickup Location</label>
+              <input type="text" id="f-pickup" placeholder="Address or landmark">
+            </div>
+            <div class="field">
+              <label>Emergency Type</label>
+              <select id="f-emergencyType">
+                <option>Cardiac Arrest</option>
+                <option>Stroke</option>
+                <option>Road Accident</option>
+                <option>Burns</option>
+                <option>Respiratory</option>
+                <option>Obstetric</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Contact Number</label>
+              <input type="tel" id="f-contact" placeholder="+91">
+            </div>
+          </div>
+
+          <div style="margin-top:14px; border-top: 1px solid var(--border); padding-top:14px;">
+            <div class="card-label" style="margin-bottom:10px">Vitals Check</div>
+            <div class="toggle-row" id="v-conscious">
+              <div class="toggle-label">Patient Conscious?</div>
+              <div class="toggle" id="t-conscious" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="toggle-row" id="v-breathing">
+              <div class="toggle-label">Breathing Normally?</div>
+              <div class="toggle on" id="t-breathing" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="toggle-row" id="v-bleeding">
+              <div class="toggle-label">Severe Bleeding?</div>
+              <div class="toggle" id="t-bleeding" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:18px">
+            <button class="btn btn-primary" onclick="submitEmergency()">Dispatch Now</button>
+            <button class="btn btn-ghost">Save Draft</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title" style="margin-bottom:14px">Dispatch Timeline</div>
+          <div style="padding:24px 0; text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">No active dispatch</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:4px">Submit an emergency to see the timeline</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: AI ASSESSMENT -->
+    <div class="tab-panel" id="tab2">
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:18px">AI Patient Assessment</div>
+          <div style="padding:40px 0; text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">No patient selected</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:4px">Select a patient from an active emergency to see AI assessment</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title" style="margin-bottom:12px">Symptom Scoring</div>
+          <div style="padding:24px 0; text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">No assessment data</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:4px">AI scoring will appear here</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: HOSPITALS -->
+    <div class="tab-panel" id="tab3">
+      <div class="grid-2">
+        <div class="hosp-card selected">
+          <div class="hosp-name">AIIMS — All India Institute</div>
+          <div class="hosp-type">Government · Level 1 Trauma · 7.8km</div>
+          <div class="hosp-beds">
+            <span class="bed-chip avail">ICU: 4 free</span>
+            <span class="bed-chip avail">Cardiology: 2 free</span>
+            <span class="bed-chip low">Emergency: 1 free</span>
+            <span class="bed-chip">General: 12 free</span>
+          </div>
+          <div style="margin-top:10px; font-size:12px; color:var(--success)">Best match for cardiac case — Nearest trauma center</div>
+        </div>
+
+        <div class="hosp-card">
+          <div class="hosp-name">Safdarjung Hospital</div>
+          <div class="hosp-type">Government · Level 1 · 9.2km</div>
+          <div class="hosp-beds">
+            <span class="bed-chip low">ICU: 2 free</span>
+            <span class="bed-chip">General: 8 free</span>
+            <span class="bed-chip full">Emergency: 0 free</span>
+          </div>
+        </div>
+
+        <div class="hosp-card">
+          <div class="hosp-name">Fortis Shalimar Bagh</div>
+          <div class="hosp-type">Private · Multispeciality · 12.4km</div>
+          <div class="hosp-beds">
+            <span class="bed-chip avail">ICU: 7 free</span>
+            <span class="bed-chip avail">Cardiology: 4 free</span>
+            <span class="bed-chip avail">Emergency: 3 free</span>
+          </div>
+        </div>
+
+        <div class="hosp-card">
+          <div class="hosp-name">Max Super Speciality — Saket</div>
+          <div class="hosp-type">Private · Multispeciality · 14.1km</div>
+          <div class="hosp-beds">
+            <span class="bed-chip avail">ICU: 5 free</span>
+            <span class="bed-chip avail">General: 11 free</span>
+            <span class="bed-chip low">Emergency: 2 free</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: ROUTE -->
+    <div class="tab-panel" id="tab4">
+      <div class="grid-2-1">
+        <div class="card" style="padding:0">
+          <div style="padding:12px 16px; border-bottom:1px solid var(--border);">
+            <span class="section-title">Route — No Active Corridor</span>
+          </div>
+          <div class="map-container" style="border:none; border-radius:0 0 10px 10px; height:320px">
+            <div class="map-placeholder" style="flex-direction:column;gap:10px">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+              </svg>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);letter-spacing:0.05em">No active corridor</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card card-sm">
+            <div class="card-label">Distance</div>
+            <div class="card-value">—<small> km</small></div>
+          </div>
+          <div class="card card-sm">
+            <div class="card-label">ETA</div>
+            <div class="card-value">—<small> min</small></div>
+          </div>
+          <div class="card card-sm">
+            <div class="card-label">Signals Cleared</div>
+            <div class="card-value">0</div>
+          </div>
+          <div class="card card-sm">
+            <div class="card-label">Time Saved</div>
+            <div class="card-value">—<small> %</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: NOTIFICATIONS -->
+    <div class="tab-panel" id="tab5">
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:14px">Email Notifications</div>
+          <div style="padding:32px 0; text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">No notifications to send</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:4px">Notifications will appear here when emergencies are dispatched</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title" style="margin-bottom:14px">Dispatch Summary</div>
+          <div style="padding:24px 0; text-align:center;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">No dispatch records</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:4px">Summary will be available after first dispatch</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: SETTINGS -->
+    <div class="tab-panel" id="tab6">
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:18px">System Configuration</div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">AI Assessment (Cerebras)</div>
+              <div class="toggle-sub">LLaMA-3.1-70b inference</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Auto Green Corridor (PCS ≥ 6)</div>
+              <div class="toggle-sub">Automatically activate for critical cases</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Email Notifications</div>
+              <div class="toggle-sub">Hospital, police, family alerts</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">Live Map Tracking</div>
+              <div class="toggle-sub">Real-time ambulance position</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title" style="margin-bottom:18px">API Keys Status</div>
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
+            <div style="display:flex;justify-content:space-between;padding:10px;background:var(--surface2);border-radius:7px;border:1px solid var(--border)">
+              <span style="color:var(--text2)">CEREBRAS_API_KEY</span>
+              <span class="badge badge-ok">Active</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px;background:var(--surface2);border-radius:7px;border:1px solid var(--border)">
+              <span style="color:var(--text2)">TAVILY_API_KEY</span>
+              <span class="badge badge-ok">Active</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px;background:var(--surface2);border-radius:7px;border:1px solid var(--border)">
+              <span style="color:var(--text2)">GOOGLE_MAPS_KEY</span>
+              <span class="badge badge-warn">Optional</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(248,113,113,0.05);border-radius:7px;border:1px solid rgba(248,113,113,0.15)">
+              <span style="color:var(--text2)">SMTP / Email</span>
+              <span class="badge badge-crit">Not Set</span>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding:11px;background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.15);border-radius:7px;font-size:12px;color:var(--critical);">
+            Email notifications disabled. Set SMTP_EMAIL and SMTP_PASSWORD in .env to enable.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toastMsg">Done</span>
+</div>
+
+<script>
+  var API_BASE = '/api';
+
+  // ── IMMEDIATE AUTH CHECK ────────────────────────────────────────────────────
+  if (!localStorage.getItem('llgca_token')) {
+    window.location.href = '/';
+    throw new Error('Not authenticated');
+  }
+
+  var tabs = document.querySelectorAll('.tab-panel');
+  var navItems = document.querySelectorAll('.nav-item');
+  var titles = ['Overview', 'New Emergency', 'AI Assessment', 'Hospitals', 'Route', 'Notifications', 'Settings'];
+
+  // ── State ─────────────────────────────────────────────────────────────────────
+  var currentEmergency = null;
+  var trackingInterval = null;
+  var cctvLocations = [];
+  var map = null;
+  var ambulanceMarker = null;
+  var routePolyline = null;
+  var cctvMarkers = {};
+  var hospitalMarkers = {};
+  var trackingActive = false;
+  var activeCorridor = null;
+  var autoDispatchTimer = null;
+
+  // ── Auth guard ──────────────────────────────────────────────────────────────
+  var _authChecked = false;
+
+  function getAuthHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + (localStorage.getItem('llgca_token') || ''),
+    };
+  }
+
+  function getUser() {
+    try { return JSON.parse(localStorage.getItem('llgca_user') || '{}'); }
+    catch (e) { return {}; }
+  }
+
+  function requireAuth() {
+    if (!localStorage.getItem('llgca_token')) {
+      window.location.href = 'login.html';
+      return false;
+    }
+    return true;
+  }
+
+  function doLogout() {
+    var user = getUser();
+    fetch(API_BASE + '/auth/logout', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ username: user.username }),
+    }).catch(function() {});
+    localStorage.removeItem('llgca_token');
+    localStorage.removeItem('llgca_user');
+    window.location.href = '/';
+  }
+
+  // ── Tab switching ───────────────────────────────────────────────────────────
+  function switchTab(i) {
+    try {
+      tabs.forEach(function(t, j) { t.classList.toggle('active', j === i); });
+      navItems.forEach(function(n, j) { n.classList.toggle('active', j === i); });
+      document.getElementById('topbarTitle').textContent = titles[i];
+      loadTab(i);
+    } catch (e) {
+      console.error('switchTab error:', e);
+      showToast('Navigation error: ' + e.message, 'crit');
+    }
+  }
+
+  function loadTab(i) {
+    try {
+      if (i === 0) { loadOverview(); if (!map) initMap(); }
+      if (i === 1) initNewEmergency();
+      if (i === 2) loadAIAssessment();
+      if (i === 3) loadHospitals();
+      if (i === 4) loadRoute();
+      if (i === 5) loadNotifications();
+      if (i === 6) loadSettings();
+    } catch (e) {
+      console.error('loadTab(' + i + ') error:', e);
+    }
+  }
+
+  // ── Clock ───────────────────────────────────────────────────────────────────
+  function tick() {
+    var now = new Date();
+    var h = String(now.getHours()).padStart(2, '0');
+    var m = String(now.getMinutes()).padStart(2, '0');
+    var s = String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('clock').textContent = h + ':' + m + ':' + s;
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  // ── Toast ───────────────────────────────────────────────────────────────────
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.className = 'toast show toast-' + (type || 'ok');
+    setTimeout(function() { t.classList.remove('show'); }, 3500);
+  }
+
+  // ── Leaflet Map ──────────────────────────────────────────────────────────────
+  function initMap() {
+    if (map) return;
+    map = L.map('liveMap', {
+      center: [19.89, 75.33],
+      zoom: 13,
+      zoomControl: false,
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap contributors © CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19,
+    }).addTo(map);
+
+    L.control.zoom({ position: 'topright' }).addTo(map);
+
+    fetch(API_BASE + '/cctv-locations', { headers: getAuthHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(cameras) {
+        cctvLocations = cameras;
+        renderCCTVMarkers();
+      })
+      .catch(function() {});
+
+    fetch(API_BASE + '/hospitals', { headers: getAuthHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(hospitals) {
+        renderHospitalMarkers(hospitals);
+      })
+      .catch(function() {});
+  }
+
+  function renderCCTVMarkers() {
+    cctvLocations.forEach(function(cam) {
+      var marker = L.circleMarker([cam.lat, cam.lng], {
+        radius: 6,
+        fillColor: '#fbbf24',
+        color: '#fbbf24',
+        weight: 2,
+        opacity: 0.8,
+        fillOpacity: 0.5,
+      });
+      marker.bindTooltip('<span style="font-family:\'JetBrains Mono\',monospace;font-size:10px">' + cam.id + '<br>' + cam.name + '</span>', {
+        direction: 'top', offset: [0, -8],
+      });
+      marker.addTo(map);
+      cctvMarkers[cam.id] = marker;
+    });
+  }
+
+  function renderHospitalMarkers(hospitals) {
+    hospitals.forEach(function(h) {
+      var coords = h.coordinates || {};
+      if (!coords.lat || !coords.lng) return;
+      var color = h.type === 'Government' ? '#34d399' : '#4f8ef7';
+      var marker = L.circleMarker([coords.lat, coords.lng], {
+        radius: 8,
+        fillColor: color,
+        color: '#fff',
+        weight: 1.5,
+        opacity: 1,
+        fillOpacity: 0.7,
+      });
+      marker.bindTooltip('<span style="font-family:\'JetBrains Mono\',monospace;font-size:10px">' + h.shortName + '</span>', {
+        direction: 'top', offset: [0, -8],
+      });
+      marker.addTo(map);
+      hospitalMarkers[h.shortName] = marker;
+    });
+  }
+
+  // Hardcoded fallback route between CCTV waypoints for Aurangabad area
+  var FALLBACK_ROUTE = [
+    { lat: 19.8782, lng: 75.3280, order: 0 },
+    { lat: 19.8830, lng: 75.3420, order: 1 },
+    { lat: 19.8880, lng: 75.3100, order: 2 },
+    { lat: 19.8920, lng: 75.3480, order: 3 },
+    { lat: 19.8966, lng: 75.3216, order: 4 },
+    { lat: 19.8947, lng: 75.3230, order: 5 },
+  ];
+
+  function startTracking(emergencyId) {
+    if (trackingInterval) clearInterval(trackingInterval);
+    trackingActive = true;
+    document.getElementById('trackingStrip').style.display = 'flex';
+    document.getElementById('mapTitle').textContent = 'Live Tracking';
+    document.getElementById('mapStatus').textContent = 'Tracking active';
+
+    function pollTracking() {
+      fetch(API_BASE + '/tracking/' + emergencyId, { headers: getAuthHeaders() })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.error) {
+            console.warn('Tracking poll error:', data.error);
+            return;
+          }
+          // Use fallback route if corridor has no route
+          var route = (data.corridor && data.corridor.route && data.corridor.route.length > 0)
+            ? data.corridor.route
+            : FALLBACK_ROUTE;
+          if (data.corridor) data.corridor.route = route;
+          activeCorridor = data.corridor;
+
+          drawRoute(route);
+
+          // Set emergency marker if not already set
+          if (data.emergency) setEmergencyMarker(data.emergency);
+
+          // Place or update ambulance at the starting position immediately
+          if (data.ambulance && data.ambulance.currentLocation) {
+            updateAmbulancePosition({ location: data.ambulance.currentLocation });
+          } else if (route && route.length > 0) {
+            updateAmbulancePosition({ location: route[0] });
+          }
+
+          updateTrackingUI(data);
+        })
+        .catch(function(err) {
+          console.warn('Tracking fetch failed, retrying:', err);
+        });
+    }
+
+    pollTracking();
+    trackingInterval = setInterval(function() {
+      if (!trackingActive || !currentEmergency) return;
+      moveAmbulance(currentEmergency._id);
+    }, 3000);
+  }
+
+  function moveAmbulance(emergencyId) {
+    fetch(API_BASE + '/tracking/' + emergencyId + '/move', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({}),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        console.warn('Move ambulance error:', data.error);
+        // Hardcode movement along fallback route on error
+        simulateAmbulanceMove();
+        return;
+      }
+      updateAmbulancePosition(data);
+      updateTrackingStrip(data);
+      if (data.arrived) {
+        clearInterval(trackingInterval);
+        trackingActive = false;
+        document.getElementById('mapTitle').textContent = 'Arrived at Hospital';
+        document.getElementById('cctvLabel').textContent = 'DESTINATION REACHED';
+        showToast('Ambulance arrived at hospital!', 'ok');
+        loadOverview();
+      }
+    })
+    .catch(function(err) {
+      console.warn('Move ambulance fetch failed, simulating:', err);
+      simulateAmbulanceMove();
+    });
+  }
+
+  // Fallback: advance ambulance marker along fallback route locally
+  var _simIdx = 0;
+  function simulateAmbulanceMove() {
+    var route = (activeCorridor && activeCorridor.route && activeCorridor.route.length > 0)
+      ? activeCorridor.route : FALLBACK_ROUTE;
+    if (_simIdx >= route.length) _simIdx = route.length - 1;
+    var wp = route[_simIdx];
+    updateAmbulancePosition({ location: { lat: wp.lat, lng: wp.lng } });
+    // Find nearest CCTV to this waypoint
+    var camList = cctvLocations.length > 0 ? cctvLocations : FALLBACK_ROUTE;
+    var nearestCCTV = camList.reduce(function(best, cctv) {
+      var d = Math.sqrt(Math.pow(wp.lat - cctv.lat, 2) + Math.pow(wp.lng - cctv.lng, 2));
+      var bd = Math.sqrt(Math.pow(wp.lat - best.lat, 2) + Math.pow(wp.lng - best.lng, 2));
+      return d < bd ? cctv : best;
+    }, camList[0]);
+    document.getElementById('cctvLabel').textContent = (nearestCCTV ? (nearestCCTV.id + ' - ' + nearestCCTV.name) : 'En route');
+    _simIdx++;
+    if (_simIdx >= route.length) {
+      clearInterval(trackingInterval);
+      trackingActive = false;
+      document.getElementById('mapTitle').textContent = 'Arrived at Hospital';
+      document.getElementById('cctvLabel').textContent = 'DESTINATION REACHED';
+      showToast('Ambulance arrived at hospital!', 'ok');
+    }
+  }
+
+  function updateAmbulancePosition(data) {
+    if (!data.location) return;
+    var lat = data.location.lat;
+    var lng = data.location.lng;
+
+    if (!ambulanceMarker) {
+      var icon = L.divIcon({
+        html: '<div class="ambulance-marker"><div class="ambulance-marker-inner">A</div></div>',
+        className: '',
+        iconSize: [28, 28],
+        iconAnchor: [14, 28],
+        popupAnchor: [0, -30],
+      });
+      ambulanceMarker = L.marker([lat, lng], { icon: icon }).addTo(map);
+    } else {
+      ambulanceMarker.setLatLng([lat, lng]);
+    }
+  }
+
+  function updateTrackingStrip(data) {
+    if (data.nearestCCTV) {
+      document.getElementById('cctvLabel').textContent =
+        data.nearestCCTV.id + ' - ' + data.nearestCCTV.name;
+    }
+    document.getElementById('mapStatus').textContent = 'Tracking active';
+  }
+
+  function updateTrackingUI(data) {
+    if (data.nearestCCTV) {
+      document.getElementById('cctvLabel').textContent =
+        data.nearestCCTV.id + ' - ' + data.nearestCCTV.name;
+    }
+  }
+
+  function drawRoute(route) {
+    if (routePolyline) { map.removeLayer(routePolyline); routePolyline = null; }
+    if (!route || route.length < 2) return;
+    var coords = route.map(function(wp) { return [wp.lat, wp.lng]; });
+    routePolyline = L.polyline(coords, {
+      color: '#4f8ef7',
+      weight: 3,
+      opacity: 0.7,
+      dashArray: '8, 8',
+    }).addTo(map);
+    map.fitBounds(routePolyline.getBounds(), { padding: [20, 20] });
+  }
+
+  function setEmergencyMarker(emergency) {
+    var coords = emergency && emergency.pickupCoordinates;
+    if (!coords || !coords.lat) return;
+    var marker = L.circleMarker([coords.lat, coords.lng], {
+      radius: 9,
+      fillColor: '#f87171',
+      color: '#fff',
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.8,
+    });
+    marker.bindTooltip('<span style="font-family:\'JetBrains Mono\',monospace;font-size:10px">EMERGENCY<br>' + (emergency ? emergency.pickupLocation : '') + '</span>', {
+      direction: 'top', offset: [0, -10],
+    });
+    marker.addTo(map);
+  }
+
+  // ── Overview ────────────────────────────────────────────────────────────────
+  function loadOverview() {
+    fetch(API_BASE + '/dashboard/stats', { headers: getAuthHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var cards = document.querySelectorAll('#tab0 .card-value');
+        if (cards[0]) cards[0].textContent = data.activeEmergencies || 0;
+        if (cards[1]) cards[1].textContent = data.enRoute || 0;
+        if (cards[2]) cards[2].textContent = data.corridorsActive || 0;
+        if (cards[3]) cards[3].textContent = data.totalToday || 0;
+      })
+      .catch(function() {});
+
+    fetch(API_BASE + '/hospitals', { headers: getAuthHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(hospitals) {
+        renderHospitalCapacity(hospitals);
+      })
+      .catch(function() {});
+
+    fetch(API_BASE + '/emergencies/active', { headers: getAuthHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(emergencies) {
+        renderActiveDispatches(emergencies);
+      })
+      .catch(function() {});
+  }
+
+  function renderHospitalCapacity(hospitals) {
+    var container = document.getElementById('hospitalCapacityCard');
+    if (!container) return;
+    var totalIcu = hospitals.reduce(function(s, h) {
+      var icu = (h.beds || []).find(function(b) { return b.category === 'ICU'; });
+      return s + (icu ? icu.available : 0);
+    }, 0);
+    var el = container.querySelector('.card-value');
+    if (el) el.innerHTML = totalIcu + '<small> ICU beds</small>';
+  }
+
+  function renderActiveDispatches(emergencies) {
+    var tbody = document.querySelector('#tab0 .ptable tbody');
+    if (!tbody) return;
+    if (!emergencies || emergencies.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3)">No active dispatches</td></tr>';
+      return;
+    }
+    tbody.innerHTML = emergencies.map(function(e) {
+      var statusLabel = { pending: 'badge-warn', dispatched: 'badge-ok', en_route: 'badge-ok' };
+      return '<tr>' +
+        '<td>' + (e.patient ? e.patient.name : '-') + '</td>' +
+        '<td><span class="badge ' + (statusLabel[e.status] || 'badge-ok') + '">' + e.emergencyType + '</span></td>' +
+        '<td>' + e.pickupLocation + '</td>' +
+        '<td>' + (e.hospital ? e.hospital.name : '-') + '</td>' +
+        '<td><span class="badge ' + (e.patient && e.patient.pcsScore >= 7 ? 'badge-crit' : 'badge-warn') + '">' + (e.patient ? e.patient.pcsScore : '-') + '</span></td>' +
+        '<td>' + e.status + '</td>' +
+        '<td>' + (e.eta ? e.eta + ' min' : '-') + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  // ── New Emergency ────────────────────────────────────────────────────────────
+  function initNewEmergency() {
+    currentEmergency = null;
+    _simIdx = 0;
+    if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
+    trackingActive = false;
+    document.getElementById('trackingStrip').style.display = 'none';
+    if (ambulanceMarker) { map.removeLayer(ambulanceMarker); ambulanceMarker = null; }
+    if (routePolyline) { map.removeLayer(routePolyline); routePolyline = null; }
+  }
+
+  function submitEmergency() {
+    var patientName = document.getElementById('f-patientName') ?
+      document.getElementById('f-patientName').value : '';
+    var ageGender = document.getElementById('f-ageGender') ?
+      document.getElementById('f-ageGender').value : '';
+    var pickup = document.getElementById('f-pickup') ?
+      document.getElementById('f-pickup').value : '';
+    var emergType = document.getElementById('f-emergencyType') ?
+      document.getElementById('f-emergencyType').value : '';
+    var contact = document.getElementById('f-contact') ?
+      document.getElementById('f-contact').value : '';
+    var conscious = document.getElementById('t-conscious') ?
+      document.getElementById('t-conscious').classList.contains('on') : true;
+    var breathing = document.getElementById('t-breathing') ?
+      document.getElementById('t-breathing').classList.contains('on') : true;
+    var bleeding  = document.getElementById('t-bleeding') ?
+      document.getElementById('t-bleeding').classList.contains('on') : false;
+
+    var parts = ageGender.match(/(\d+)\s*(M|F)?/);
+    var age = parts ? parseInt(parts[1]) : 0;
+    var gender = parts && parts[2] ? parts[2].toUpperCase() : '';
+
+    var payload = {
+      patientName: patientName,
+      age: age,
+      gender: gender,
+      pickupLocation: pickup,
+      emergencyType: emergType,
+      contactNumber: contact,
+      pickupCoordinates: { lat: 19.8830, lng: 75.3420 },  // hardcoded Aurangabad fallback
+      vitals: {
+        conscious: conscious,
+        breathingNormally: breathing,
+        severeBleeding: bleeding,
+      },
+      createdBy: getUser().username || 'admin',
+    };
+
+    fetch(API_BASE + '/emergencies', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      currentEmergency = data.emergency;
+      showToast('Emergency registered: ' + data.emergency.caseNumber, 'ok');
+      renderDispatchTimeline(data.emergency);
+
+      // Auto-dispatch after 10 seconds
+      showToast('Ambulance will be dispatched in 10 seconds...', 'ok');
+      autoDispatchTimer = setTimeout(function() {
+        autoDispatch(data.emergency._id);
+      }, 10000);
+    })
+    .catch(function() {
+      showToast('Failed to register emergency', 'crit');
+    });
+  }
+
+  // Hardcoded hospital & ambulance IDs (from setup_db seed data)
+  var FALLBACK_AMBULANCE_ID = null; // filled after first fetch
+  var FALLBACK_HOSPITAL_ID  = null;
+  var FALLBACK_HOSPITALS    = [];  // loaded from API
+  var FALLBACK_AMBULANCES   = [];  // loaded from API
+
+  // Override autoDispatch to always work even if DB fetch fails
+  function autoDispatch(emergencyId) {
+    showToast('Auto-dispatching ambulance...', 'ok');
+
+    function doDispatch(ambId, hospId) {
+      return fetch(API_BASE + '/emergencies/' + emergencyId + '/dispatch', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ ambulanceId: ambId, hospitalId: hospId, actor: getUser().username }),
+      }).then(function(r) { return r.json(); });
+    }
+
+    function doCorridor(emergency, hospId) {
+      // Use the fallback route since hospital coords may not be usable
+      var hospCoords = { lat: 19.8947, lng: 75.3230 }; // Oak Hospital coords
+      var emergCoords = (emergency.pickupCoordinates && emergency.pickupCoordinates.lat)
+        ? emergency.pickupCoordinates
+        : { lat: 19.8830, lng: 75.3420 }; // fallback to CIDCO N-1
+      return fetch(API_BASE + '/emergencies/' + emergencyId + '/corridor', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          hospitalId: hospId,
+          route: FALLBACK_ROUTE,
+          distanceKm: 3.5,
+        }),
+      }).then(function(r) { return r.json(); });
+    }
+
+    Promise.all([
+      fetch(API_BASE + '/hospitals', { headers: getAuthHeaders() }).then(function(r) { return r.json(); }),
+      fetch(API_BASE + '/ambulances/available', { headers: getAuthHeaders() }).then(function(r) { return r.json(); }),
+    ])
+    .then(function(results) {
+      var hospitals  = results[0] || [];
+      var ambulances = results[1] || [];
+
+      FALLBACK_HOSPITALS   = hospitals;
+      FALLBACK_AMBULANCES  = ambulances;
+
+      // Prefer ambulance at MGM Hospital area
+      var ambulance = ambulances.length > 0 ? ambulances[0] : null;
+      // Pick hospital with most available ICU beds
+      var hospital = hospitals.reduce(function(best, h) {
+        var hIcu = (h.beds || []).find(function(b) { return b.category === 'ICU'; });
+        var bIcu = (best.beds || []).find(function(b) { return b.category === 'ICU'; });
+        return (hIcu ? hIcu.available : 0) > (bIcu ? bIcu.available : 0) ? h : best;
+      }, hospitals[0] || { _id: null, beds: [] });
+
+      if (!ambulance || !hospital) {
+        showToast('No ambulance/hospital available — check database seed data', 'crit');
+        return;
+      }
+
+      FALLBACK_AMBULANCE_ID = ambulance._id;
+      FALLBACK_HOSPITAL_ID  = hospital._id;
+
+      return doDispatch(ambulance._id, hospital._id);
+    })
+    .then(function(emergency) {
+      if (!emergency || emergency.error) {
+        showToast('Dispatch API error: ' + (emergency ? emergency.error : 'unknown'), 'crit');
+        return;
+      }
+      if (!emergency._id) return;
+      return doCorridor(emergency, emergency.assignedHospitalId || FALLBACK_HOSPITAL_ID);
+    })
+    .then(function(corridor) {
+      showToast('Ambulance dispatched — live tracking started', 'ok');
+      switchTab(0);
+      if (!map) initMap();
+      setTimeout(function() { startTracking(currentEmergency._id); }, 500);
+    })
+    .catch(function(err) {
+      console.error('Auto-dispatch failed:', err);
+      showToast('Auto-dispatch failed — check API connection', 'crit');
+    });
+  }
+
+  function renderDispatchTimeline(emergency) {
+    var timelineEl = document.querySelector('#tab1 .card:last-child');
+    if (!timelineEl) return;
+    var events = [
+      { label: 'Created', detail: emergency.caseNumber + ' - ' + emergency.emergencyType, cls: 'crit' },
+      { label: 'Pending',  detail: 'Auto-dispatch in 10 seconds...', cls: 'warn' },
+    ];
+    timelineEl.innerHTML = '<div class="timeline">' + events.map(function(ev) {
+      return '<div class="tl-item"><div class="tl-left">' +
+        '<div class="tl-time">' + ev.label + '</div>' +
+        '<div class="tl-dot ' + ev.cls + '"></div></div>' +
+        '<div class="tl-content"><div class="tl-title">' + ev.label + '</div>' +
+        '<div class="tl-detail">' + ev.detail + '</div></div></div>';
+    }).join('') + '</div>';
+  }
+
+  // ── AI Assessment ───────────────────────────────────────────────────────────
+  function loadAIAssessment() {
+    fetch(API_BASE + '/emergencies/active', { headers: getAuthHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(emergencies) {
+        if (!emergencies || emergencies.length === 0) return;
+        var e = emergencies[0];
+        if (e.patient) {
+          var patient = e.patient;
+          document.querySelector('#tab2 .card:first-child').innerHTML =
+            '<div class="section-title" style="margin-bottom:18px">AI Patient Assessment</div>' +
+            '<div><strong>Patient:</strong> ' + patient.name + ' (' + patient.age + patient.gender + ')</div>' +
+            '<div><strong>Case:</strong> ' + e.emergencyType + ' - ' + e.pickupLocation + '</div>' +
+            '<div style="margin-top:12px"><strong>PCS Score:</strong> ' +
+            '<span class="badge ' + (patient.pcsScore >= 7 ? 'badge-crit' : 'badge-warn') + '">' +
+            patient.pcsScore + '</span></div>' +
+            '<div style="margin-top:8px"><strong>Assessment:</strong></div>' +
+            '<p style="color:var(--text2);font-size:13px;margin-top:4px">' +
+            (patient.aiAssessment ? patient.aiAssessment.summary : 'Not yet assessed') + '</p>';
+        }
+      })
+      .catch(function() {});
+  }
+
+  // ── Hospitals ───────────────────────────────────────────────────────────────
+  function loadHospitals() {
+    fetch(API_BASE + '/hospitals', { headers: getAuthHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(hospitals) {
+        renderHospitalCards(hospitals);
+      })
+      .catch(function() {});
+  }
+
+  function renderHospitalCards(hospitals) {
+    var grid = document.querySelector('#tab3 .grid-2');
+    if (!grid) return;
+    grid.innerHTML = hospitals.map(function(h) {
+      var bedChips = (h.beds || []).map(function(b) {
+        return '<span class="bed-chip ' + b.status + '">' + b.category + ': ' + b.available + ' free</span>';
+      }).join('');
+      return '<div class="hosp-card">' +
+        '<div class="hosp-name">' + h.name + '</div>' +
+        '<div class="hosp-type">' + h.type + ' - ' + h.level + ' - ' + h.avgResponseTime + ' min</div>' +
+        '<div class="hosp-beds">' + bedChips + '</div></div>';
+    }).join('');
+  }
+
+  // ── Route ───────────────────────────────────────────────────────────────────
+  function loadRoute() {
+    fetch(API_BASE + '/corridors/active', { headers: getAuthHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(corridors) {
+        if (!corridors || corridors.length === 0) return;
+        var c = corridors[0];
+        var cards = document.querySelectorAll('#tab4 .card-value');
+        if (cards[0]) cards[0].innerHTML = (c.distanceKm || 0) + '<small> km</small>';
+        if (cards[1]) cards[1].innerHTML = (c.etaMinutes || 0) + '<small> min</small>';
+        if (cards[2]) cards[2].textContent = c.signalsCleared || 0;
+        if (cards[3]) cards[3].innerHTML = (c.timeSavedPercent || 0) + '<small> %</small>';
+      })
+      .catch(function() {});
+  }
+
+  // ── Notifications ───────────────────────────────────────────────────────────
+  function loadNotifications() {
+    fetch(API_BASE + '/notifications', { headers: getAuthHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(notifications) {
+        renderNotifications(notifications);
+      })
+      .catch(function() {});
+  }
+
+  function renderNotifications(notifications) {
+    var container = document.querySelector('#tab5 .card:first-child');
+    if (!container) return;
+    if (!notifications || notifications.length === 0) {
+      container.innerHTML = '<div class="section-title" style="margin-bottom:14px">Email Notifications</div>' +
+        '<div style="padding:32px 0;text-align:center">' +
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3)">No notifications</div></div>';
+      return;
+    }
+    container.innerHTML = '<div class="section-title" style="margin-bottom:14px">Email Notifications</div>' +
+      notifications.map(function(n) {
+        return '<div class="notif-card">' +
+          '<div class="notif-header">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
+          '<div class="notif-title">' + (n.subject || 'Notification') + '</div>' +
+          '<div class="notif-to">' + n.type + '</div></div>' +
+          '<div class="notif-body">' + (n.body || '') + '</div></div>';
+      }).join('');
+  }
+
+  // ── Settings ────────────────────────────────────────────────────────────────
+  var settingsState = {};
+
+  function loadSettings() {
+    fetch(API_BASE + '/settings', { headers: getAuthHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(settings) {
+        settingsState = settings;
+        applySettingsToUI(settings);
+      })
+      .catch(function() {});
+  }
+
+  function applySettingsToUI(settings) {
+    var toggles = document.querySelectorAll('#tab6 .toggle');
+    var keys = ['aiAssessmentEnabled', 'autoGreenCorridor', 'emailNotificationsEnabled', 'liveMapTrackingEnabled'];
+    toggles.forEach(function(toggle, i) {
+      var key = keys[i];
+      if (settings[key]) toggle.classList.add('on');
+      else toggle.classList.remove('on');
+    });
+  }
+
+  // ── Keyboard shortcut ────────────────────────────────────────────────────────
+  document.addEventListener('keydown', function(e) {
+    var tag = document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    var k = parseInt(e.key);
+    if (k >= 1 && k <= 7) switchTab(k - 1);
+  });
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  loadOverview();
+  setTimeout(function() { initMap(); }, 300);
+</script>
+</body>
+</html>

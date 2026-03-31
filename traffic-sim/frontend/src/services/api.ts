@@ -56,6 +56,12 @@ export interface OrganResponse {
   dispatchedAt: string;
   destinationHospital: string;
   organType: string;
+  route: LatLng[];
+  routes: RouteWithCCTVs[];
+  cctvs: CCTVNode[];
+  waypoints: SimulationWaypoints | null;
+  bestRouteIndex: number;
+  violations: ViolationEvent[];
 }
 
 export interface PatientPayload {
@@ -78,6 +84,12 @@ export interface PatientResponse {
   destinationHospital: string;
   patientName: string;
   ambulanceId: string;
+  route: LatLng[];
+  routes: RouteWithCCTVs[];
+  cctvs: CCTVNode[];
+  waypoints: SimulationWaypoints | null;
+  bestRouteIndex: number;
+  violations: ViolationEvent[];
 }
 
 export type LatLng = [number, number];

@@ -14,7 +14,7 @@ import {
 } from "./services/api";
 
 type LatLng = [number, number];
-const AMBULANCE_ANIMATION_INTERVAL_MS = 100;
+const AMBULANCE_ANIMATION_INTERVAL_MS = 300;
 const CCTV_HIGHLIGHT_DISTANCE_METERS = 50;
 
 function metersBetween(a: LatLng, b: LatLng): number {
@@ -47,6 +47,10 @@ function App() {
   const [waypoints, setWaypoints] = useState<SimulationWaypoints | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Refs to avoid stale closures in animation intervals
+  const allRoutesRef = useRef<RouteWithCCTVs[]>([]);
+  const shortestRouteIndexRef = useRef<number | null>(null);
+
   // CCTV nodes from the best route — used for proximity highlighting
   const bestRouteCCTVs = shortestRouteIndex !== null ? (allRoutes[shortestRouteIndex]?.cctvs ?? []) : [];
 
@@ -78,6 +82,10 @@ function App() {
 
       const result = await startSimulation(source, destination);
 
+      // Sync refs first so the interval callback sees current data
+      allRoutesRef.current = result.routes || [];
+      shortestRouteIndexRef.current = result.bestRouteIndex ?? null;
+
       // Use backend's best route for ambulance animation
       setRoute(result.route);
       setAllRoutes(result.routes || []);
@@ -90,9 +98,13 @@ function App() {
       // Ambulance animation along the route
       let i = 0;
       animationRef.current = window.setInterval(() => {
+        const currentBestRouteCCTVs =
+          shortestRouteIndexRef.current !== null
+            ? (allRoutesRef.current[shortestRouteIndexRef.current]?.cctvs ?? [])
+            : [];
         const pos = result.route[i];
         setAmbulancePos(pos);
-        setActiveCCTVId(findNearestCCTV(pos, bestRouteCCTVs));
+        setActiveCCTVId(findNearestCCTV(pos, currentBestRouteCCTVs));
         i++;
 
         if (i >= result.route.length && animationRef.current !== null) {
@@ -135,12 +147,16 @@ function App() {
       },
     ];
 
+    // Sync refs first so the interval callback sees current data
+    allRoutesRef.current = result.routes || [];
+    shortestRouteIndexRef.current = result.bestRouteIndex ?? null;
+
     setRoute(result.route || []);
-    setAllRoutes([]);
-    setShortestRouteIndex(null);
-    setViolations([]);
+    setAllRoutes(result.routes || []);
+    setShortestRouteIndex(result.bestRouteIndex ?? null);
+    setViolations(result.violations || []);
     setLogs(logs);
-    setWaypoints(null);
+    setWaypoints(result.waypoints || null);
     setActiveCCTVId(null);
     setAmbulancePos((result.route && result.route[0]) || null);
 
@@ -148,9 +164,13 @@ function App() {
     if (result.route && result.route.length > 0) {
       let i = 0;
       animationRef.current = window.setInterval(() => {
+        const currentBestRouteCCTVs =
+          shortestRouteIndexRef.current !== null
+            ? (allRoutesRef.current[shortestRouteIndexRef.current]?.cctvs ?? [])
+            : [];
         const pos = result.route[i];
         setAmbulancePos(pos);
-        setActiveCCTVId(findNearestCCTV(pos, bestRouteCCTVs));
+        setActiveCCTVId(findNearestCCTV(pos, currentBestRouteCCTVs));
         i++;
         if (i >= result.route.length && animationRef.current !== null) {
           clearInterval(animationRef.current);
@@ -188,12 +208,16 @@ function App() {
       },
     ];
 
+    // Sync refs first so the interval callback sees current data
+    allRoutesRef.current = result.routes || [];
+    shortestRouteIndexRef.current = result.bestRouteIndex ?? null;
+
     setRoute(result.route || []);
-    setAllRoutes([]);
-    setShortestRouteIndex(null);
-    setViolations([]);
+    setAllRoutes(result.routes || []);
+    setShortestRouteIndex(result.bestRouteIndex ?? null);
+    setViolations(result.violations || []);
     setLogs(logs);
-    setWaypoints(null);
+    setWaypoints(result.waypoints || null);
     setActiveCCTVId(null);
     setAmbulancePos((result.route && result.route[0]) || null);
 
@@ -201,9 +225,13 @@ function App() {
     if (result.route && result.route.length > 0) {
       let i = 0;
       animationRef.current = window.setInterval(() => {
+        const currentBestRouteCCTVs =
+          shortestRouteIndexRef.current !== null
+            ? (allRoutesRef.current[shortestRouteIndexRef.current]?.cctvs ?? [])
+            : [];
         const pos = result.route[i];
         setAmbulancePos(pos);
-        setActiveCCTVId(findNearestCCTV(pos, bestRouteCCTVs));
+        setActiveCCTVId(findNearestCCTV(pos, currentBestRouteCCTVs));
         i++;
         if (i >= result.route.length && animationRef.current !== null) {
           clearInterval(animationRef.current);

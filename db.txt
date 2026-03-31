@@ -1,0 +1,26 @@
+╭─── Claude Code v2.1.87 ──────────────────────────────────────────────────────╮
+│                                            │ Tips for getting started        │
+│                Welcome back!               │ Run /init to create a CLAUDE.m… │
+│                                            │ ─────────────────────────────── │
+│                   ▐▛███▜▌                  │ Recent activity                 │
+│                  ▝▜█████▛▘                 │ No recent activity              │
+│                    ▘▘ ▝▝                   │                                 │
+│                                            │                                 │
+│   minimax-m2.7:cloud · API Usage Billing   │                                 │
+│       D:\STUDY\PROJECTS\MGM-SyncFlow       │                                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+❯ read the entire code base, there is no database in the current project, i     
+want you and me to discuss collection to be made in mongodb and create a .md    
+file here and store all the collections to be made on database                  
+
+● I'll explore the codebase to understand the data models and entities first.
+
+● Explore(Explore codebase structure)
+  ⎿  Done (52 tool uses · 71.4k tokens · 3m 21s)
+  (ctrl+o to expand)
+  ⎿  1316 skills available
+
+✻ Cooked for 3m 30s
+
+❯ save this all details in db.md file                                           
