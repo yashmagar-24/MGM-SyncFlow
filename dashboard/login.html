@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLGCA — LifeLine Green Corridor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #161b27;
+    --surface2: #1e2536;
+    --border: #2a3147;
+    --border2: #353f59;
+    --accent: #4f8ef7;
+    --accent-hover: #6aa3ff;
+    --text: #e4e8f0;
+    --text2: #8b95a8;
+    --text3: #525c73;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --critical: #f87171;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* LEFT PANEL */
+  .left-panel {
+    width: 52%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px 56px;
+    border-right: 1px solid var(--border);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .brand-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .brand-icon svg { width: 20px; height: 20px; }
+
+  .brand-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .brand-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 1px;
+  }
+
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 28px;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  .hero-title {
+    font-size: clamp(32px, 3.5vw, 48px);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .hero-title span { color: var(--accent); }
+
+  .hero-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text2);
+    max-width: 440px;
+  }
+
+  /* Stats */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .stat-value small {
+    font-size: 12px;
+    color: var(--text3);
+    margin-left: 2px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 5px;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    gap: 20px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    flex-shrink: 0;
+  }
+
+  .status-dot.ok { background: var(--success); }
+  .status-dot.warn { background: var(--warning); }
+  .status-dot.crit { background: var(--critical); }
+
+  /* RIGHT PANEL — Login */
+  .right-panel {
+    width: 48%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 56px;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .login-header { margin-bottom: 32px; }
+
+  .login-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .login-subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  /* Form */
+  .form-group { margin-bottom: 18px; }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 7px;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-input::placeholder { color: var(--text3); }
+
+  .form-input:focus {
+    border-color: var(--accent);
+  }
+
+  .form-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .form-row a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .form-row a:hover { color: var(--accent-hover); }
+
+  .btn-login {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-login:hover { background: var(--accent-hover); }
+
+  .btn-outline {
+    width: 100%;
+    padding: 11px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    margin-top: 10px;
+  }
+
+  .btn-outline:hover {
+    border-color: var(--border2);
+    color: var(--text);
+  }
+
+  .security-note {
+    margin-top: 24px;
+    font-size: 11px;
+    color: var(--text3);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  /* Bottom strip */
+  .emergency-strip {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 10px 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .strip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--critical);
+    flex-shrink: 0;
+  }
+
+  .strip-sep { color: var(--border); }
+</style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="left-panel">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent)">
+        <path d="M3 12h4l3-9 4 18 3-9h4"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">LLGCA System</div>
+      <div class="brand-sub">Aurangabad, Maharashtra · Emergency Network</div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="tag">System active — all nodes online</div>
+
+    <h1 class="hero-title">LifeLine<br>Green Corridor<br><span>AI Platform</span></h1>
+
+    <p class="hero-desc">Real-time emergency dispatch, AI-powered patient criticality assessment, and automated green corridor activation for ambulances across Aurangabad, Maharashtra hospitals.</p>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">1.8<small>min</small></div>
+        <div class="stat-label">Avg. dispatch time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">4</div>
+        <div class="stat-label">Hospitals connected</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">45<small>%</small></div>
+        <div class="stat-label">Time saved w/ corridor</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="status-item">
+      <div class="status-dot ok"></div>
+      AIIMS — 4 ICU beds
+    </div>
+    <div class="status-item">
+      <div class="status-dot warn"></div>
+      Safdarjung — 2 beds
+    </div>
+    <div class="status-item">
+      <div class="status-dot ok"></div>
+      Fortis — 7 beds
+    </div>
+    <div class="status-item">
+      <div class="status-dot ok"></div>
+      Max — 5 beds
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right-panel">
+  <div class="login-box">
+    <div class="login-header">
+      <h2 class="login-title">Sign in</h2>
+      <p class="login-subtitle">Aurangabad Emergency Dispatch Portal</p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input type="text" class="form-input" id="username" placeholder="Enter your username">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-input" id="password" placeholder="Enter your password">
+    </div>
+
+    <div class="form-row">
+      <span>Remember this device</span>
+      <a href="#">Reset password</a>
+    </div>
+
+    <button class="btn-login" onclick="handleLogin()">Sign in</button>
+    <button class="btn-outline" onclick="window.location.href='/dashboard'">Continue as guest</button>
+
+    <p class="security-note">
+      All sessions are encrypted and audit-logged.<br>
+      Authorized personnel only.
+    </p>
+  </div>
+</div>
+
+<script>
+  var API_BASE = 'http://localhost:5000/api';
+
+  function handleLogin() {
+    var user = document.getElementById('username').value.trim();
+    var pass = document.getElementById('password').value;
+    var inputs = document.querySelectorAll('.form-input');
+
+    if (!user || !pass) {
+      inputs.forEach(function(i) {
+        if (!i.value) {
+          i.style.borderColor = '#f87171';
+          setTimeout(function() { i.style.borderColor = ''; }, 1500);
+        }
+      });
+      return;
+    }
+
+    fetch(API_BASE + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user, password: pass })
+    })
+    .then(function(res) {
+      if (!res.ok) {
+        if (res.status === 401) {
+          showError('Invalid username or password');
+        } else {
+          showError('Login failed. Server error.');
+        }
+        return null;
+      }
+      return res.json();
+    })
+    .then(function(data) {
+      if (!data) return;
+      // Store token and user info
+      localStorage.setItem('llgca_token', data.token);
+      localStorage.setItem('llgca_user', JSON.stringify(data.user));
+      window.location.href = '/dashboard';
+    })
+    .catch(function(err) {
+      showError('Cannot connect to server. Is the API running?');
+      console.error(err);
+    });
+  }
+
+  function showError(msg) {
+    var existing = document.querySelector('.login-error');
+    if (existing) existing.remove();
+    var err = document.createElement('div');
+    err.className = 'login-error';
+    err.style.cssText = 'color:#f87171;font-size:12px;margin-top:8px;text-align:center';
+    err.textContent = msg;
+    document.querySelector('.login-box').appendChild(err);
+    setTimeout(function() { err.remove(); }, 3000);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleLogin();
+  });
+
+  // Redirect if already logged in
+  if (localStorage.getItem('llgca_token')) {
+    window.location.href = '/dashboard';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -:*)",
+      "Bash(python replace_script.py)",
+      "mcp__ide__getDiagnostics",
+      "Bash(python:*)"
+    ]
+  }
+}
